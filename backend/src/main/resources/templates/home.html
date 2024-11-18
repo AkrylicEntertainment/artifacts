@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.w3.org/1999/xhtml" lang="en">
+<head th:replace="~{layout :: head}">
+    <title>Home</title>
+</head>
+<body layout:fragment="content" th:replace="~{layout :: body}">
+    <div class="jumbotron text-center bg-light p-5">
+        <h1>Welcome to My Website</h1>
+        <p>Your one-stop solution for amazing projects and documentation!</p>
+        <a class="btn btn-primary btn-lg" th:href="@{/projects}">Explore Projects</a>
+    </div>
+
+    <div class="container mt-5">
+        <h2 class="text-center">Features</h2>
+        <div class="row mt-4">
+            <div class="col-md-4 text-center">
+                <img src="https://via.placeholder.com/150" alt="Feature 1" class="rounded-circle">
+                <h3>Feature 1</h3>
+                <p>Learn about our powerful tools to enhance your productivity.</p>
+            </div>
+            <div class="col-md-4 text-center">
+                <img src="https://via.placeholder.com/150" alt="Feature 2" class="rounded-circle">
+                <h3>Feature 2</h3>
+                <p>Explore documentation to quickly get started on your projects.</p>
+            </div>
+            <div class="col-md-4 text-center">
+                <img src="https://via.placeholder.com/150" alt="Feature 3" class="rounded-circle">
+                <h3>Feature 3</h3>
+                <p>Engage with community-driven projects and contribute back.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-secondary text-white mt-5 p-5">
+        <div class="container">
+            <h2>About Us</h2>
+            <p>We are committed to delivering high-quality tools, resources, and documentation to empower developers worldwide.</p>
+            <a class="btn btn-light" th:href="@{/about}">Learn More</a>
+        </div>
+    </div>
+
+    <!-- Call to Action Section -->
+    <div class="container text-center mt-5">
+        <h2>Get Started Now</h2>
+        <p>Join our growing community and make the most of your development journey.</p>
+        <a class="btn btn-success btn-lg" th:href="@{/signup}">Sign Up</a>
+    </div>
+</body>
+</html>
