@@ -4,4 +4,5 @@ import org.springframework.stereotype.Service
 
 @Service
 class ProjectService {
+    fun getAllProjects(): List<Project> = listOf()
 }
