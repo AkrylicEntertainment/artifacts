@@ -11,20 +11,10 @@ import org.springframework.security.web.SecurityFilterChain
 @Configuration
 @EnableWebSecurity
 class SecurityConfig {
-
-    @Bean
-    fun webSecurityCustomizer(): WebSecurityCustomizer {
-        return WebSecurityCustomizer { web ->
-            web.ignoring()
-                .requestMatchers("/css/**", "/js/**", "/img/**", "/lib/**", "/favicon.ico")
-        }
-    }
-
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain = http
         .authorizeHttpRequests { auth -> auth
-            .requestMatchers("/").permitAll()
-            .requestMatchers("/favicon.ico").permitAll()
+
 
         }
         .oauth2Login {  }

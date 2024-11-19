@@ -4,8 +4,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 @SpringBootApplication
-class TicketingApplication
+class ByteStore
 
 fun main(args: Array<String>) {
-    runApplication<TicketingApplication>(*args)
+    runApplication<ByteStore>(*args)
 }
