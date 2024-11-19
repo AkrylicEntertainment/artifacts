@@ -9,7 +9,7 @@ import jakarta.servlet.ServletRequest
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("/nodes")
+@RequestMapping("/api/nodes")
 class NodeController(private val nodeService: NodeService) {
 
     @GetMapping("")

@@ -1,20 +1,43 @@
 package dev.nateweisz.bytestore.user.service
 
+import dev.nateweisz.bytestore.user.User
 import dev.nateweisz.bytestore.user.UserRepository
-import org.springframework.beans.factory.annotation.Value
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken
 import org.springframework.stereotype.Service
-
-const val GITHUB_URL = "https://github.com/"
-const val GITHUB_OAUTH_URL = "$GITHUB_URL/login/oauth/authorize?scope=user:email?client_id=%client_id%"
+import java.time.LocalDateTime
 
 @Service
-class UserService(val userRepository: UserRepository) {
+class UserService(val userRepository: UserRepository, val clientService: OAuth2AuthorizedClientService) {
 
-    @Value("\${github.client-id}")
-    lateinit var clientId: String
+    fun processOAuthPostLogin(authentication: OAuth2AuthenticationToken): User {
+        val oauth2User = authentication.principal
 
-    @Value("\${github.client-secret}")
-    lateinit var clientSecret: String
 
-    val oAuthUrl get() = GITHUB_OAUTH_URL.replace("%client_id%", clientId)
+        val githubId = oauth2User.name
+        val username = oauth2User.getAttribute<String>("login")!!
+        val email = oauth2User.getAttribute<String>("email")!!
+        val avatarUrl = oauth2User.getAttribute<String>("avatar_url")!!
+
+        var existingUser: User? = userRepository.findByGithubId(githubId)
+
+        if (existingUser == null) {
+            existingUser = User(
+                id = "",
+                githubId = githubId,
+                username = username,
+                email = email,
+                avatarUrl = avatarUrl,
+                firstName = "",
+                lastName = "",
+                lastLogin = LocalDateTime.now()
+            )
+
+        }
+
+        existingUser.lastLogin = LocalDateTime.now()
+
+        return userRepository.save(existingUser)
+    }
 }
