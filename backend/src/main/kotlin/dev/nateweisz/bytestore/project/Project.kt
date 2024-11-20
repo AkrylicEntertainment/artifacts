@@ -6,6 +6,6 @@ import org.springframework.data.mongodb.core.mapping.Document
 @Document(collection = "projects")
 data class Project(
     @Id
-    val id: Long
+    val id: Long,
 ) {
 }
