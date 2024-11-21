@@ -16,6 +16,6 @@ class AuthController(val userService: UserService) {
     @GetMapping("/login/success")
     fun loginSuccess(authentication: OAuth2AuthenticationToken?, response: HttpServletResponse) {
         val user: User = userService.processOAuthPostLogin(authentication!!)
-        response.sendRedirect("http://localhost:3000/dashboard?userId=" + user.id)
+        response.sendRedirect("http://localhost:3000/dashboard?userId")
     }
 }

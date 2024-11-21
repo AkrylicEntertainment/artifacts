@@ -21,10 +21,10 @@ class SecurityConfig(
         .csrf { customizer -> customizer.disable() }
         .authorizeHttpRequests { customizer -> customizer
             .requestMatchers("/", "/error").permitAll()
-            .anyRequest().authenticated()
+            .anyRequest().permitAll()
 
         }
-        .oauth2Login { auth -> auth
-            .defaultSuccessUrl("/login/success", true)}
+        //.oauth2Login { auth -> auth
+        //    .defaultSuccessUrl("/login/success", true)}
         .build()
 }

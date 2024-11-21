@@ -24,7 +24,6 @@ class UserService(val userRepository: UserRepository, val clientService: OAuth2A
 
         if (existingUser == null) {
             existingUser = User(
-                id = "",
                 githubId = githubId,
                 username = username,
                 email = email,
