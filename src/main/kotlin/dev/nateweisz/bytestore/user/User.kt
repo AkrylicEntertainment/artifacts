@@ -8,8 +8,6 @@ import java.time.LocalDateTime
 @Document(collection = "users")
 class User(
     @Id
-    val id: String,
-
     val githubId: String,
     val username: String,
     val email: String,
