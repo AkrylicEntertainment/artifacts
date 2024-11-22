@@ -43,4 +43,17 @@ class ProjectController(val projectRepository: ProjectRepository, val gitHub: Gi
 
         return project
     }
+
+    @GetMapping("/{username}/{repository}/commits")
+    @RateLimited(10)
+    fun getProjectCommits(@PathVariable username: String, @PathVariable repository: String): List<String> {
+
+        // fetch latest 15 commits from github
+        // fetch all builds for project (max 15)
+        // return list of commit display info along with status if they are built / have an ongoing build
+        val repo = gitHub.getRepository("$username/$repository") ?: throw IllegalArgumentException("Repository not found")
+        val commits = repo.listCommits().toList().take(15)
+
+        return listOf()
+    }
 }

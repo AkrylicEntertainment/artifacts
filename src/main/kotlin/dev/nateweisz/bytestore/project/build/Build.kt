@@ -9,6 +9,7 @@ data class Build(
     val commitHash: String,
     val buildAt: LocalDateTime = LocalDateTime.now(),
     var location: BuildLocation = BuildLocation.LOCAL,
+    var status: BuildStatus
 
     // TODO: checksums
 )
