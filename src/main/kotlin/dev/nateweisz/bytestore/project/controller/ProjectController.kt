@@ -5,7 +5,9 @@ import dev.nateweisz.bytestore.project.Project
 import dev.nateweisz.bytestore.project.ProjectRepository
 import dev.nateweisz.bytestore.project.build.BuildRepository
 import dev.nateweisz.bytestore.project.data.ProjectCommitInfo
+import jakarta.servlet.http.HttpSession
 import org.kohsuke.github.GitHub
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -74,5 +76,15 @@ class ProjectController(val projectRepository: ProjectRepository, val buildRepos
                 buildInfo = build
             )
         }
+    }
+
+    @GetMapping("/{userId}")
+    @RateLimited(10)
+    fun getUserProjects(@PathVariable userId: Long, session: HttpSession): ResponseEntity<List<Project>> {
+        if (session.getAttribute("user_id") as? Long != userId) {
+            return ResponseEntity.status(501).build()
+        }
+
+        return  ResponseEntity.ok(projectRepository.findAllByUserId(userId))
     }
 }

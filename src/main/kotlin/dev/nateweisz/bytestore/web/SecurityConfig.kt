@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.authentication.logout.CookieClearingLogoutHandler
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository
 
 
@@ -19,6 +20,7 @@ class SecurityConfig {
         .csrf { customizer -> customizer.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()) }
         .authorizeHttpRequests { customizer -> customizer
             .requestMatchers("/", "/error").permitAll()
+            .requestMatchers("/api/projects/{userId}").authenticated()
             .requestMatchers("/api/user/").authenticated()
             .anyRequest().permitAll()
 
@@ -28,6 +30,10 @@ class SecurityConfig {
         }
         .oauth2Login { auth -> auth
             .defaultSuccessUrl("/api/auth/login/success", true)}
+        .logout { logout -> logout
+            .logoutUrl("/api/auth/logout")
+            .addLogoutHandler(CookieClearingLogoutHandler("SKIBIDI_AUTH_TOKEN"))
+        }
         .build()
 
     @Bean
