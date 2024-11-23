@@ -10,11 +10,10 @@ class User(
     @Id
     val githubId: String,
     val username: String,
-    val email: String,
     val avatarUrl: String,
 
-    val firstName: String,
-    val lastName: String,
+    val display: String,
+
     val createdAt: LocalDateTime = LocalDateTime.now(),
     var lastLogin: LocalDateTime,
 ) {}

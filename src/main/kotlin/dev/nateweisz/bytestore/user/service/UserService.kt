@@ -3,22 +3,21 @@ package dev.nateweisz.bytestore.user.service
 import dev.nateweisz.bytestore.user.User
 import dev.nateweisz.bytestore.user.UserRepository
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken
+import org.springframework.security.oauth2.core.user.OAuth2User
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
 class UserService(val userRepository: UserRepository, val clientService: OAuth2AuthorizedClientService) {
 
-    fun processOAuthPostLogin(authentication: OAuth2AuthenticationToken): User {
-        val oauth2User = authentication.principal
-
-
-        val githubId = oauth2User.name
-        val username = oauth2User.getAttribute<String>("login")!!
-        val email = oauth2User.getAttribute<String>("email")!!
-        val avatarUrl = oauth2User.getAttribute<String>("avatar_url")!!
+    fun processOAuthPostLogin(oAuth2User: OAuth2User): User {
+        val githubId = oAuth2User.getAttribute<Int>("id").toString()
+        val username = oAuth2User.getAttribute<String>("login")!!
+        val avatarUrl = oAuth2User.getAttribute<String>("avatar_url")!!
+        val display = oAuth2User.getAttribute<String>("name")!!
 
         var existingUser: User? = userRepository.findByGithubId(githubId)
 
@@ -26,13 +25,10 @@ class UserService(val userRepository: UserRepository, val clientService: OAuth2A
             existingUser = User(
                 githubId = githubId,
                 username = username,
-                email = email,
                 avatarUrl = avatarUrl,
-                firstName = "",
-                lastName = "",
-                lastLogin = LocalDateTime.now()
+                lastLogin = LocalDateTime.now(),
+                display = display
             )
-
         }
 
         existingUser.lastLogin = LocalDateTime.now()
