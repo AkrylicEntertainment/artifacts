@@ -1,12 +1,18 @@
 package dev.nateweisz.bytestore.project.controller
 
 import dev.nateweisz.bytestore.annotations.RateLimited
+import dev.nateweisz.bytestore.lib.Github
+import dev.nateweisz.bytestore.lib.takeFirst
 import dev.nateweisz.bytestore.project.Project
 import dev.nateweisz.bytestore.project.ProjectRepository
 import dev.nateweisz.bytestore.project.build.BuildRepository
 import dev.nateweisz.bytestore.project.data.ProjectCommitInfo
 import jakarta.servlet.http.HttpSession
+import okhttp3.internal.trimSubstring
+import org.json.JSONArray
+import org.json.JSONObject
 import org.kohsuke.github.GitHub
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -17,6 +23,9 @@ import kotlin.system.measureTimeMillis
 @RestController
 @RequestMapping("/api/projects")
 class ProjectController(val projectRepository: ProjectRepository, val buildRepository: BuildRepository, val gitHub: GitHub) {
+
+    @Value("\${github.backend.token}")
+    private lateinit var githubToken: String
 
     @GetMapping("/top")
     @RateLimited(10)
@@ -51,34 +60,32 @@ class ProjectController(val projectRepository: ProjectRepository, val buildRepos
 
     @GetMapping("/{username}/{repository}/commits")
     @RateLimited(10)
-    fun getProjectCommits(@PathVariable username: String, @PathVariable repository: String): List<ProjectCommitInfo> {
+    fun getProjectCommits(@PathVariable username: String, @PathVariable repository: String): ResponseEntity<List<ProjectCommitInfo>> {
         // fetch latest 15 commits from github
         // fetch all builds for project (max 15)
         // return list of commit display info along with status if they are built / have an ongoing build
         // TODO: we should cache these for like 5 minutes
-        val repo = gitHub.getRepository("$username/$repository") ?: throw IllegalArgumentException("Repository not found")
-        val commits = repo.listCommits()
-            .withPageSize(10)
-            .iterator()
-        val commitList = commits.nextPage();
-
         // check commits for builds
-        val builds = buildRepository.findByProjectIdAndCommitHashIn(repo.id, commitList.map { it.shA1 })
+        // TODOL switch to a gRPC that just manages all the github requests and stuff (stand alone)
+        // this is prob bad to get just by name and not id since we dont currently have a refreshing thing that updates the names
+        val commits = parseCommits(Github.getRepositoryCommits(username, repository, githubToken)) ?: return ResponseEntity.status(404).build()
+        val project = projectRepository.findByUsernameAndRepoName(username, repository) ?: return ResponseEntity.status(404).build()
+        val builds = buildRepository.findByProjectIdAndCommitHashIn(project.id.toLong(), commits.map { commit -> commit.getString("sha") })
 
         // TODO: why the heck is this so slow
-        return commitList.map { commit ->
-            val build = builds.find { it.commitHash == commit.shA1 }
+        return ResponseEntity.ok(commits.map { commit ->
+            val build = builds.find { it.commitHash == commit.getString("sha") }
             ProjectCommitInfo(
-                commitHash = commit.shA1,
-                commitMessage = commit.commitShortInfo.message,
-                author = commit.committer.name,
-                date = commit.commitDate.toLocaleString(),
+                commitHash = commit.getString("sha"),
+                commitMessage = commit.getJSONObject("commit").getString("message").takeFirst(50),
+                author = commit.getJSONObject("commit").getJSONObject("author").getString("name"),
+                date = commit.getJSONObject("commit").getJSONObject("author").getString("date"),
                 buildInfo = build
             )
-        }
+        })
     }
 
-    @GetMapping("/{userId}")
+    @GetMapping("/user/{userId}")
     @RateLimited(10)
     fun getUserProjects(@PathVariable userId: Long, session: HttpSession): ResponseEntity<List<Project>> {
         if (session.getAttribute("user_id") as? Long != userId) {
@@ -86,5 +93,17 @@ class ProjectController(val projectRepository: ProjectRepository, val buildRepos
         }
 
         return  ResponseEntity.ok(projectRepository.findAllByUserId(userId))
+    }
+
+    private fun parseCommits(commits: JSONArray?): List<JSONObject>? {
+        if (commits == null) {
+            return null
+        }
+
+        val commitList = mutableListOf<JSONObject>()
+        for (i in 0 until commits.length()) {
+            commitList.add(commits.getJSONObject(i))
+        }
+        return commitList
     }
 }

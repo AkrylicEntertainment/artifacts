@@ -2,16 +2,12 @@ package dev.nateweisz.bytestore.user.service
 
 import dev.nateweisz.bytestore.user.User
 import dev.nateweisz.bytestore.user.UserRepository
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken
 import org.springframework.security.oauth2.core.user.OAuth2User
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
-class UserService(val userRepository: UserRepository, val clientService: OAuth2AuthorizedClientService) {
+class UserService(val userRepository: UserRepository) {
 
     fun processOAuthPostLogin(oAuth2User: OAuth2User): User {
         val githubId = oAuth2User.getAttribute<Int>("id").toString()

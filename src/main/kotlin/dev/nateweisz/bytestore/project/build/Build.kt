@@ -11,7 +11,7 @@ data class Build(
     val id: UUID = UUID.randomUUID(),
     val projectId: Long,
     val commitHash: String,
-    val buildAt: LocalDateTime = LocalDateTime.now(),
+    val builtAt: LocalDateTime = LocalDateTime.now(),
     var location: BuildLocation = BuildLocation.LOCAL,
     var status: BuildStatus
 

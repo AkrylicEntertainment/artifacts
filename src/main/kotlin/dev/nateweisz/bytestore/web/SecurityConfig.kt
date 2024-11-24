@@ -20,7 +20,7 @@ class SecurityConfig {
         .csrf { customizer -> customizer.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()) }
         .authorizeHttpRequests { customizer -> customizer
             .requestMatchers("/", "/error").permitAll()
-            .requestMatchers("/api/projects/{userId}").authenticated()
+            .requestMatchers("/api/projects/user/{userId}").authenticated()
             .requestMatchers("/api/user/").authenticated()
             .anyRequest().permitAll()
 
