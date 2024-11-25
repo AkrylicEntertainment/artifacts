@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.9.25"
+    kotlin("jvm") version "2.0.0-RC1"
     kotlin("plugin.spring") version "1.9.25"
     id("org.springframework.boot") version "3.3.5"
     id("io.spring.dependency-management") version "1.1.6"
@@ -29,6 +29,8 @@ dependencies {
     implementation("org.kohsuke:github-api:2.0.0-alpha-2")
     implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.14")
     implementation("org.json:json:20240303")
+    implementation("com.digitalsanctuary:ds-spring-cf-turnstile:1.1.5") // used for requesting builds
+    implementation("org.springframework.boot:spring-boot-starter-websocket")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.springframework.security:spring-security-test")

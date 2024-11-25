@@ -5,10 +5,12 @@ import dev.nateweisz.bytestore.lib.Github
 import dev.nateweisz.bytestore.lib.takeFirst
 import dev.nateweisz.bytestore.project.Project
 import dev.nateweisz.bytestore.project.ProjectRepository
+import dev.nateweisz.bytestore.project.build.Build
 import dev.nateweisz.bytestore.project.build.BuildRepository
+import dev.nateweisz.bytestore.project.build.BuildService
+import dev.nateweisz.bytestore.project.build.BuildStatus
 import dev.nateweisz.bytestore.project.data.ProjectCommitInfo
 import jakarta.servlet.http.HttpSession
-import okhttp3.internal.trimSubstring
 import org.json.JSONArray
 import org.json.JSONObject
 import org.kohsuke.github.GitHub
@@ -16,13 +18,18 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import kotlin.system.measureTimeMillis
 
 @RestController
 @RequestMapping("/api/projects")
-class ProjectController(val projectRepository: ProjectRepository, val buildRepository: BuildRepository, val gitHub: GitHub) {
+class ProjectController(
+    val projectRepository: ProjectRepository,
+    val buildRepository: BuildRepository,
+    val gitHub: GitHub,
+    val buildService: BuildService
+) {
 
     @Value("\${github.backend.token}")
     private lateinit var githubToken: String
@@ -93,6 +100,47 @@ class ProjectController(val projectRepository: ProjectRepository, val buildRepos
         }
 
         return  ResponseEntity.ok(projectRepository.findAllByUserId(userId))
+    }
+
+    /**
+     * Trigger a build for a project.
+     *
+     * @return The build id that can be used to grab build logs and other information during the build
+     */
+    @PostMapping("/{username}/{repository}/build/{commitHash}")
+    @RateLimited(3)
+    fun build(@PathVariable username: String, @PathVariable repository: String, @PathVariable commitHash: String): ResponseEntity<Build> {
+        val project = projectRepository.findByUsernameAndRepoName(username, repository) ?: return ResponseEntity.status(404).build()
+        val existingBuild = buildRepository.findByProjectIdAndCommitHash(project.id.toLong(), commitHash)
+
+        if (existingBuild != null) {
+            return ResponseEntity.status(404).build()
+        }
+
+        // Validate commit hash
+        if (!Github.isValidCommitHash(username, repository, commitHash, githubToken)) {
+            return ResponseEntity.status(404).build()
+        }
+
+        // This honestly should be handled by the build agent
+        // determine a suitable build agent
+        val build = Build(
+            projectId = project.id.toLong(),
+            owner = project.username,
+            repository = project.repoName,
+            commitHash = commitHash,
+            status = BuildStatus.IN_PROGRESS
+        )
+        val node = buildService.findOpenNode()
+        if (node == null) {
+            build.status = BuildStatus.QUEUED
+            buildService.queueBuild(build)
+            buildRepository.save(build)
+            return ResponseEntity.ok(build)
+        }
+
+        buildService.startBuildOn(node, build)
+        return ResponseEntity.ok(build)
     }
 
     private fun parseCommits(commits: JSONArray?): List<JSONObject>? {

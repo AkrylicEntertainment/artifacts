@@ -4,5 +4,5 @@ data class NodeHeartBeat(
     val nodeId: String,
     val timestamp: Long,
     val cpuUsage: Double,
-    val memoryUsage: Double
+    val memoryUsage: Long
 )

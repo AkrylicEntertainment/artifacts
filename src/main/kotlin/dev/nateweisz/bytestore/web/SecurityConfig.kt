@@ -17,7 +17,8 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository
 class SecurityConfig {
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain = http
-        .csrf { customizer -> customizer.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()) }
+        //.csrf { customizer -> customizer.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()) }
+        .csrf { customizer -> customizer.disable() }
         .authorizeHttpRequests { customizer -> customizer
             .requestMatchers("/", "/error").permitAll()
             .requestMatchers("/api/projects/user/{userId}").authenticated()

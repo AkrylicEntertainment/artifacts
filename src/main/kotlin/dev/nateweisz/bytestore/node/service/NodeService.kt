@@ -13,11 +13,13 @@ import java.util.UUID
 import java.util.concurrent.Executors
 
 @Service
-class NodeService(val nodeRepository: NodeRepository, val registrationRepository: NodeRegistrationRepository) {
+class NodeService(private val nodeRepository: NodeRepository, private val registrationRepository: NodeRegistrationRepository) {
     // we will maintain a 100% cache of all nodes in the network
     val nodes: MutableList<Node> = mutableListOf()
 
     init {
+        nodeRepository.findAll().forEach { nodes.add(it) }
+
         val scheduler = Executors.newScheduledThreadPool(1)
         scheduler.scheduleAtFixedRate({
             nodes.filter { node ->
@@ -38,6 +40,7 @@ class NodeService(val nodeRepository: NodeRepository, val registrationRepository
             node.lastHeartbeat = System.currentTimeMillis()
             node.cpuUsage = heartbeat.cpuUsage
             node.memoryUsage = heartbeat.memoryUsage
+            nodeRepository.save(node)
         }
     }
 
@@ -54,6 +57,14 @@ class NodeService(val nodeRepository: NodeRepository, val registrationRepository
 
             nodes.add(it)
             nodeRepository.save(it)
+        }
+    }
+
+    fun expire(nodeId: String) {
+        val node = nodes.find { it.id == nodeId }
+        if (node != null) {
+            node.state = State.INACTIVE
+            nodeRepository.save(node)
         }
     }
 

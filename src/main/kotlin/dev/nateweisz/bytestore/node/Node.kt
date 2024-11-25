@@ -4,7 +4,7 @@ import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
 import kotlin.time.Duration
 
-private val maxHeartBeatTheshold: Long = 1000 * 30; // 30 seconds
+private val maxHeartBeatTheshold: Long = 10 * 1000; // 10 seconds
 
 /**
  * A node represent a connected docker container that is running a bytestore-builder instance.
@@ -23,7 +23,7 @@ data class Node(
     var state: State = State.ACTIVE,
     var lastHeartbeat: Long? = -1,
     var cpuUsage: Double? = 0.0,
-    var memoryUsage: Double? = 0.0
+    var memoryUsage: Long? = 0L
 ) {
     fun isHealthy(): Boolean {
         return lastHeartbeat?.let { System.currentTimeMillis() - it < maxHeartBeatTheshold } ?: false

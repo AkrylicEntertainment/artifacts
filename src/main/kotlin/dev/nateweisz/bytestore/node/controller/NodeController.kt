@@ -17,13 +17,9 @@ class NodeController(private val nodeService: NodeService) {
         return nodeService.nodes
     }
 
-    @PostMapping("/{nodeId}/heartbeat")
-    fun heartbeat(nodeId: String, @RequestBody heartbeat: NodeHeartBeat) {
-        nodeService.heartbeat(nodeId, heartbeat)
-    }
-
     @PostMapping("/register")
     fun registerNode(@RequestBody registration: RegistrationRequest, request: ServletRequest): Node {
+        println("TEST!!")
         return nodeService.registerNode(registration, request)
     }
 

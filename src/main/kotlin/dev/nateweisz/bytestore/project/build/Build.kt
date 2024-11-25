@@ -10,6 +10,8 @@ data class Build(
     @Id
     val id: UUID = UUID.randomUUID(),
     val projectId: Long,
+    val owner: String,
+    val repository: String,
     val commitHash: String,
     val builtAt: LocalDateTime = LocalDateTime.now(),
     var location: BuildLocation = BuildLocation.LOCAL,

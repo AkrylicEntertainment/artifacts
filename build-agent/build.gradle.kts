@@ -1,5 +1,6 @@
 plugins {
-    kotlin("jvm") version "1.9.25"
+    kotlin("jvm") version "2.0.0-RC1"
+    kotlin("plugin.serialization") version "2.0.20"
 }
 
 group = "dev.nateweisz"
@@ -16,6 +17,13 @@ repositories {
 }
 
 dependencies {
+    implementation("io.ktor:ktor-client-core:3.0.1")
+    implementation("io.ktor:ktor-client-cio:3.0.1")
+    implementation("io.ktor:ktor-client-websockets:3.0.1")
+    implementation("io.ktor:ktor-client-content-negotiation:3.0.1")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:3.0.1")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:7.0.0.202409031743-r")
+    implementation("org.gradle:gradle-tooling-api:7.1.1")
 }
 
 kotlin {

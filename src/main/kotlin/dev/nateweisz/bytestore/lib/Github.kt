@@ -37,4 +37,22 @@ object Github {
         val responseBody = response.body.string()
         return JSONArray(responseBody)
     }
+
+    fun isValidCommitHash(user: String, repo: String, commitHash: String, accessToken: String? = null): Boolean {
+        val client = OkHttpClient()
+        val url = "https://api.github.com/repos/$user/$repo/commits/$commitHash"
+
+        val requestBuilder = Request.Builder()
+            .url(url)
+            .get()
+
+        accessToken?.let {
+            requestBuilder.addHeader("Authorization", "Bearer $it")
+        }
+
+        val request = requestBuilder.build()
+        val response = client.newCall(request).execute()
+
+        return response.isSuccessful
+    }
 }
