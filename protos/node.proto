@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package dev.nateweisz.bytestore.protocol;
+
+option java_package = "dev.nateweisz.bytestore.protocol";
+option java_outer_classname = "NodeProtocol";
+option java_multiple_files = true;
+
+message HeartBeat {
+  int64 timestamp = 1;
+  double cpuUsage = 2;
+  int64 memoryUsage = 3;
+}

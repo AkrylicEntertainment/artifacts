@@ -23,7 +23,7 @@ dependencies {
     implementation("io.ktor:ktor-client-content-negotiation:3.0.1")
     implementation("io.ktor:ktor-serialization-kotlinx-json:3.0.1")
     implementation("org.eclipse.jgit:org.eclipse.jgit:7.0.0.202409031743-r")
-    implementation("org.gradle:gradle-tooling-api:7.1.1")
+    //implementation("org.gradle:gradle-tooling-api:7.1.1")
 }
 
 kotlin {

@@ -51,6 +51,8 @@ class NodeWebSocketClient {
                             val buffer = ByteBuffer.wrap(frame.data)
                             val id = buffer.getInt()
 
+                            println("Received packet: $id")
+
                             when (id) {
                                 0x00 -> {
                                     startBuild(buffer.getString(), buffer.getString())

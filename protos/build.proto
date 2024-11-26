@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package dev.nateweisz.bytestore.protocol;
+
+option java_package = "dev.nateweisz.bytestore.protocol";
+option java_outer_classname = "BuildProtocol";
+option java_multiple_files = true;
+
+message BuildRequest {
+  string owner = 1;
+  string repository = 2;
+  string commitHash = 3;
+}
+
+message BuildFinished {
+  string owner = 1;
+  string repository = 2;
+  string commitHash = 3;
+  string status = 4;
+  string log = 5;
+}
