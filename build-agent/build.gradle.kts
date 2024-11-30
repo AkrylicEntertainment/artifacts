@@ -14,6 +14,7 @@ java {
 
 repositories {
     mavenCentral()
+    maven("https://repo.gradle.org/gradle/libs-releases")
 }
 
 dependencies {
@@ -23,7 +24,9 @@ dependencies {
     implementation("io.ktor:ktor-client-content-negotiation:3.0.1")
     implementation("io.ktor:ktor-serialization-kotlinx-json:3.0.1")
     implementation("org.eclipse.jgit:org.eclipse.jgit:7.0.0.202409031743-r")
-    //implementation("org.gradle:gradle-tooling-api:7.1.1")
+    implementation("org.gradle:gradle-tooling-api:7.1.1")
+    implementation("com.github.docker-java:docker-java-core:3.4.0")
+    implementation("com.github.docker-java:docker-java-transport-httpclient5:3.4.0")
 }
 
 kotlin {

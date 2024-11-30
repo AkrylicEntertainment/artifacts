@@ -18,7 +18,6 @@ class NodeController(private val nodeService: NodeService) {
 
     @PostMapping("/register")
     fun registerNode(@RequestBody registration: RegistrationRequest, request: ServletRequest): Node {
-        println("TEST!!")
         return nodeService.registerNode(registration, request)
     }
 

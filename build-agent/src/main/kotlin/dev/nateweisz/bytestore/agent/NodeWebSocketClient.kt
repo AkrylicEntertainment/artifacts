@@ -51,8 +51,6 @@ class NodeWebSocketClient {
                             val buffer = ByteBuffer.wrap(frame.data)
                             val id = buffer.getInt()
 
-                            println("Received packet: $id")
-
                             when (id) {
                                 0x00 -> {
                                     startBuild(buffer.getString(), buffer.getString())
@@ -84,8 +82,6 @@ class NodeWebSocketClient {
                     registrationToken = null
                 ))
             }
-
-            println(response.status)
             println(response.bodyAsText())
 
             val node = response.body<Node>()
@@ -99,24 +95,6 @@ class NodeWebSocketClient {
             Files.readAllLines(configPath).first().split("=")[1]
         }
     }
-
-    //private suspend fun DefaultWebSocketSession.sendHeartbeat() {
-    //    val buffer = ByteBuffer.allocate(28)
-    //
-    //    val totalMemory = runtime.totalMemory()
-    //    val freeMemory = runtime.freeMemory()
-    //    val memoryUsage = totalMemory - freeMemory
-    //    val cpuLoad = osBean.processCpuLoad * 100
-    //    val systemLoad = osBean.systemCpuLoad * 100
-    //
-    //    buffer.putInt(0x00)
-    //    buffer.putLong(memoryUsage)
-    //    buffer.putDouble(cpuLoad)
-    //    buffer.putDouble(systemLoad)
-    //
-    //    buffer.flip()
-    //    send(Frame.Binary(true, buffer.array()))
-    //}
 
     private suspend fun DefaultWebSocketSession.sendHeartbeat() {
 

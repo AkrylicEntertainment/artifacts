@@ -16,4 +16,5 @@ class User(
 
     val createdAt: LocalDateTime = LocalDateTime.now(),
     var lastLogin: LocalDateTime,
+    val admin: Boolean = false
 ) {}

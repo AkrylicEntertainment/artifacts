@@ -36,4 +36,8 @@ class BuildService(val nodeService: NodeService, @Lazy val nodeSocketHandler: No
         currentBuilds[build.id.toString()] = Pair(node.id, build)
         nodeSocketHandler.sendMessageToNode(node.id, 0x00, RequestBuildMessage(build.owner, build.repository, build.commitHash))
     }
+
+    fun isBuilding(owner: String, repository: String, commitHash: String): Boolean {
+        return currentBuilds.values.any { it.second.owner == owner && it.second.repository == repository && it.second.commitHash == commitHash }
+    }
 }

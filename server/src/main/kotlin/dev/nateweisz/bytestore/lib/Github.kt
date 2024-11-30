@@ -28,12 +28,18 @@ object Github {
         val request = requestBuilder.build()
         val response = client.newCall(request).execute()
 
+
         if (!response.isSuccessful) {
+            response.body.close()
             return null
         }
 
-        val responseBody = response.body.string()
-        return JSONArray(responseBody)
+        try {
+            val responseBody = response.body.string()
+            return JSONArray(responseBody)
+        } finally {
+            response.body.close()
+        }
     }
 
     fun isValidCommitHash(user: String, repo: String, commitHash: String, accessToken: String? = null): Boolean {

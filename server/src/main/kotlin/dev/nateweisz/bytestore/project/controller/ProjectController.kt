@@ -111,9 +111,10 @@ class ProjectController(
     @RateLimited(3)
     fun build(@PathVariable username: String, @PathVariable repository: String, @PathVariable commitHash: String): ResponseEntity<Build> {
         val project = projectRepository.findByUsernameIgnoreCaseAndRepoNameIgnoreCase(username, repository) ?: return ResponseEntity.status(404).build()
-        val existingBuild = buildRepository.findByProjectIdAndCommitHash(project.id.toLong(), commitHash)
+        val existingBuild =  buildRepository.findByProjectIdAndCommitHash(project.id.toLong(), commitHash)
 
-        if (existingBuild != null) {
+        // Need to make sure that this can't be spammed.
+        if (existingBuild != null || buildService.isBuilding(username, repository, commitHash)) {
             return ResponseEntity.status(404).build()
         }
 
@@ -122,7 +123,6 @@ class ProjectController(
             return ResponseEntity.status(404).build()
         }
 
-        // This honestly should be handled by the build agent
         // determine a suitable build agent
         val build = Build(
             projectId = project.id.toLong(),
@@ -133,6 +133,7 @@ class ProjectController(
         )
         val node = buildService.findOpenNode()
         if (node == null) {
+            println("No nodes available, queueing build")
             build.status = BuildStatus.QUEUED
             buildService.queueBuild(build)
             buildRepository.save(build)
@@ -142,6 +143,7 @@ class ProjectController(
         println("Starting build on node ${node.id}")
 
         buildService.startBuildOn(node, build)
+        buildRepository.save(build)
         return ResponseEntity.ok(build)
     }
 
