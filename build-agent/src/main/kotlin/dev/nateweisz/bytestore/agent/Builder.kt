@@ -1,14 +1,16 @@
 package dev.nateweisz.bytestore.agent
 
 import com.github.dockerjava.api.DockerClient
+import com.github.dockerjava.api.async.ResultCallback
 import com.github.dockerjava.api.model.HostConfig
+import com.github.dockerjava.api.model.WaitResponse
 import com.github.dockerjava.core.DefaultDockerClientConfig
-import com.github.dockerjava.core.DockerClientConfig
 import com.github.dockerjava.core.DockerClientImpl
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
-import org.eclipse.jgit.api.Git
+import java.io.Closeable
 import java.io.File
+import java.io.InputStream
 import java.net.URI
 
 private val baseBuildDir = File(".builds").also {
@@ -60,6 +62,34 @@ fun startBuild(owner: String, repository: String) {
             .exec()
 
         dockerClient.startContainerCmd(createContainerRequest.id).exec()
+        dockerClient.waitContainerCmd(createContainerRequest.id)
+            .exec(object : ResultCallback<WaitResponse> {
+                override fun onStart(closeable: Closeable?) {
+                }
+
+                override fun onNext(item: WaitResponse) {
+                    println(item.statusCode)
+                }
+
+                override fun onError(throwable: Throwable) {
+                    // handle failed build
+                    throwable.printStackTrace()
+                }
+
+                override fun onComplete() {
+                    val outputStream: InputStream = dockerClient.copyArchiveFromContainerCmd(createContainerRequest.id, "./artifacts/output.jar")
+                        .exec()
+
+                    val outputFile = buildDir.resolve("output.jar")
+                    outputFile.outputStream().use { outputStream.copyTo(it) }
+                    dockerClient.removeContainerCmd(createContainerRequest.id).exec()
+                }
+
+                override fun close() {
+                    // handle failed build
+                }
+            })
+
 
     }.onFailure {
         it.printStackTrace()
