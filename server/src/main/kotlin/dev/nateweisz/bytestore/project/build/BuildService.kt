@@ -5,8 +5,11 @@ import dev.nateweisz.bytestore.node.State
 import dev.nateweisz.bytestore.node.service.NodeService
 import dev.nateweisz.bytestore.node.websocket.NodeSocketHandler
 import dev.nateweisz.bytestore.node.websocket.s2n.RequestBuildMessage
+import org.redundent.kotlin.xml.xml
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
+import java.io.File
+import java.util.UUID
 import java.util.concurrent.Executors
 
 @Service
@@ -18,8 +21,9 @@ class BuildService(
 ) {
     private val deadNodeExecutor = Executors.newSingleThreadScheduledExecutor()
     // Key: build id, Value: (node id, build)
-    private val currentBuilds: MutableMap<String, Pair<String, Build>> = mutableMapOf()
-    private val queuedBuilds: MutableList<Build> = mutableListOf()
+    val currentBuilds: MutableMap<String, Pair<String, Build>> = mutableMapOf()
+    val queuedBuilds: MutableList<Build> = mutableListOf()
+    val currentBuildSecrets: MutableMap<String, String> = mutableMapOf() // build id to build secret (used to upload jar to main server)
 
     init {
         // this executors goal is to check if any queued builds can be started
@@ -38,19 +42,60 @@ class BuildService(
     }
 
     fun startBuildOn(node: Node, build: Build) {
+        val secret = UUID.randomUUID().toString()
+
         currentBuilds[build.id.toString()] = Pair(node.id, build)
-        nodeSocketHandler.sendMessageToNode(node.id, 0x00, RequestBuildMessage(build.owner, build.repository, build.commitHash))
+        nodeSocketHandler.sendMessageToNode(node.id, 0x00, RequestBuildMessage(build.owner, build.repository, build.commitHash, secret))
     }
 
     fun isBuilding(owner: String, repository: String, commitHash: String): Boolean {
         return currentBuilds.values.any { it.second.owner == owner && it.second.repository == repository && it.second.commitHash == commitHash }
     }
 
-    fun finishBuild(webSocketId: String, status: BuildStatus, logs: String) {
-        val buildId = NodeSocketHandler.sessionIdToNodeId[webSocketId] ?: throw RuntimeException("Somebody's getting *******")
-        val (nodeId, build) = currentBuilds.remove(buildId) ?: throw RuntimeException("Somebody's getting *******")
+    fun finishBuild(webSocketId: String, status: BuildStatus, logs: String, pom: String? = null) {
+        val nodeId = NodeSocketHandler.sessionIdToNodeId[webSocketId] ?: throw RuntimeException("Somebody's getting *******")
+        val buildId = currentBuilds.keys.find { currentBuilds[it]?.first == nodeId } ?: throw RuntimeException("Somebody's getting *******")
+        val build = (currentBuilds[buildId] ?: throw RuntimeException("Somebody's getting *******")).second
+
+        if (status != BuildStatus.SUCCESS) {
+            currentBuilds.remove(buildId) // if it successfully finished, it will be removed after we receive the archive
+        }
 
         buildRepository.save(build.copy(status = status, buildBy = nodeId))
         buildLogsRepository.save(BuildLogs(buildId = build.id, logs = logs))
+
+        if (status == BuildStatus.SUCCESS) {
+            val projectDir = File(".build-artifacts/${build.owner}/${build.repository}/${build.commitHash}")
+            projectDir.mkdirs()
+
+            val pomFile = File(projectDir, "pom.xml")
+            pomFile.writeText(pom!!)
+        }
+    }
+
+    fun produceMavenXml(owner: String, repo: String, commitHash: String): String {
+        return xml("project") {
+            "modelVersion" {
+                -"4.0.0"
+            }
+            "groupId" { - "com.github.${owner.lowercase()}" }
+            "artifactId" { - repo.lowercase() }
+            "packaging" { - "jar" }
+            "name" { - repo }
+            "version" { - "${commitHash}-SNAPSHOT" }
+            "description" { - "Auto-generated pom.xml for $owner/$repo" }
+            "url" { - "http://localhost:3000/projects/${owner}/${repo}" }
+            "licenses" { // We dont license shit lmfao
+                "license" {
+                    "name" { - "MIT" }
+                    "url" { - "https://opensource.org/licenses/MIT" }
+                    "distribution" { - "repo" }
+                }
+            }
+            "scm" {
+                "connection" { - "scm:git://github.com/$owner/$repo.git"}
+                "url" { - "https://github.com/$owner/$repo"}
+            }
+        }.toString()
     }
 }

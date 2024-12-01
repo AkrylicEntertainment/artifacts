@@ -31,6 +31,7 @@ dependencies {
     implementation("org.json:json:20240303")
     implementation("com.digitalsanctuary:ds-spring-cf-turnstile:1.1.5") // used for requesting builds
     implementation("org.springframework.boot:spring-boot-starter-websocket")
+    implementation("org.redundent:kotlin-xml-builder:1.9.1")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.springframework.security:spring-security-test")

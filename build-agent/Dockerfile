@@ -26,5 +26,6 @@ RUN apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 COPY scripts/build.sh /build.sh
+COPY scripts/generate-pom.sh /generate-pom.sh
 
 ENTRYPOINT ["/bin/bash", "-l", "-c"]

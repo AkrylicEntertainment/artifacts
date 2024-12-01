@@ -15,8 +15,7 @@ class BuildFinishedMessage(private val buildService: BuildService) : N2SProtocol
         when (status) {
             BuildStatus.SUCCESS -> {
                 // Report success to build service
-                // handle receiving jar in sections of 4096 bytes
-                buildService.finishBuild(session.id, BuildStatus.SUCCESS, logs)
+                buildService.finishBuild(session.id, BuildStatus.SUCCESS, logs, data.getString())
             }
 
             BuildStatus.FAILED -> {

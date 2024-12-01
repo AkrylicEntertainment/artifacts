@@ -41,3 +41,4 @@ out/
 
 agent-data.properties
 .builds
+.build-artifacts

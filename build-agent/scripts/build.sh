@@ -36,6 +36,8 @@ echo "Build system: $build_system"
 if [[ "$build_system" == "gradle" ]]; then
   gradle build || { echo "Gradle build failed"; exit 1; }
   mv build/libs/*.jar ../artifacts/output.jar || exit
+  ../generate-pom.sh . ../artifacts/pom.xml || exit
+
 elif [[ "$build_system" == "maven" ]]; then
   mvn clean install || { echo "Maven build failed"; exit 1; }
   mv target/*.jar ../artifacts/output.jar || exit

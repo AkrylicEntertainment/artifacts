@@ -20,19 +20,17 @@ import kotlinx.serialization.json.Json
 import java.nio.file.Files
 import java.nio.file.Path
 
-val LOGGER = KotlinLogging.logger {
-
+val LOGGER = KotlinLogging.logger { }
+val client = HttpClient(CIO) {
+    install(WebSockets)
+    install(ContentNegotiation) {
+        json(Json {
+            ignoreUnknownKeys = true
+        })
+    }
 }
 
 class NodeWebSocketClient {
-    private val client = HttpClient(CIO) {
-        install(WebSockets)
-        install(ContentNegotiation) {
-            json(Json {
-                ignoreUnknownKeys = true
-            })
-        }
-    }
 
     private val osBean = ManagementFactory.getPlatformMXBean(OperatingSystemMXBean::class.java)
     private val runtime = Runtime.getRuntime()
@@ -48,6 +46,8 @@ class NodeWebSocketClient {
                 }
             }
 
+            LOGGER.info { "Successfully connected to master server" }
+
             try {
                 for (frame in incoming) {
                     when (frame) {
@@ -59,7 +59,7 @@ class NodeWebSocketClient {
 
                             when (id) {
                                 0x00 -> {
-                                    startBuild(buffer.getString(), buffer.getString())
+                                    startBuild(this, buffer.getString(), buffer.getString(), buffer.getString(), buffer.getString())
                                 }
                             }
                         }

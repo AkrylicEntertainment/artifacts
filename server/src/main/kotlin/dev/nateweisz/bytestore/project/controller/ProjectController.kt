@@ -3,6 +3,7 @@ package dev.nateweisz.bytestore.project.controller
 import dev.nateweisz.bytestore.annotations.RateLimited
 import dev.nateweisz.bytestore.lib.Github
 import dev.nateweisz.bytestore.lib.takeFirst
+import dev.nateweisz.bytestore.node.websocket.NodeSocketHandler
 import dev.nateweisz.bytestore.project.Project
 import dev.nateweisz.bytestore.project.ProjectRepository
 import dev.nateweisz.bytestore.project.build.Build
@@ -20,7 +21,10 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.multipart.MultipartFile
+import java.io.File
 
 @RestController
 @RequestMapping("/api/projects")
@@ -145,6 +149,26 @@ class ProjectController(
         buildService.startBuildOn(node, build)
         buildRepository.save(build)
         return ResponseEntity.ok(build)
+    }
+
+    @PostMapping("/{buildId}/finish/{buildSecret}")
+    fun finishBuild(@PathVariable buildId: String, buildSecret: String, @RequestParam archive: MultipartFile): ResponseEntity<Void> {
+        val build = buildService.currentBuilds[buildId]
+        if (build == null || build.second.status != BuildStatus.SUCCESS) {
+            return ResponseEntity.status(404).build()
+        }
+
+        if (buildService.currentBuildSecrets[buildId] != buildSecret) {
+            return ResponseEntity.status(501).build()
+        }
+
+        // Handle jar here
+        val projectDir = File(".build-artifacts/${build.second.owner}/${build.second.repository}/${build.second.commitHash}")
+        archive.transferTo(File(projectDir, "build.jar"))
+        buildService.currentBuilds.remove(buildId)
+        buildService.currentBuildSecrets.remove(buildId)
+
+        return ResponseEntity.ok().build()
     }
 
     private fun parseCommits(commits: JSONArray?): List<JSONObject>? {
