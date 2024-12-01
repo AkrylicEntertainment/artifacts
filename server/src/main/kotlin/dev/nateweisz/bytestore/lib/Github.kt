@@ -56,6 +56,7 @@ object Github {
 
         val request = requestBuilder.build()
         val response = client.newCall(request).execute()
+        response.body.close()
 
         return response.isSuccessful
     }

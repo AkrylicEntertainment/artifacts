@@ -29,18 +29,9 @@ val dockerClient: DockerClient = DockerClientImpl.getInstance(dockerClientConfig
 
 fun startBuild(owner: String, repository: String) {
     runCatching {
-        val buildDir = baseBuildDir.resolve(owner)
-        buildDir.deleteRecursively()
-        buildDir.mkdirs()
-
-        // Close is immediately after since we won't need it anymore
-            /* Git.cloneRepository()
-            .setURI("https://github.com/$owner/$repository.git")
-            .setDirectory(buildDir.resolve(repository))
-            .call()
-            .close()
-
-             */
+        LOGGER.info { "Starting build for https://github.com/$owner/$repository" }
+        baseBuildDir.deleteRecursively()
+        baseBuildDir.mkdirs()
 
         // connect to docker
         // run git clone https://github.com/$owner/$repository.git project
@@ -61,6 +52,8 @@ fun startBuild(owner: String, repository: String) {
             )
             .exec()
 
+        LOGGER.info { "Docker container has been started: $" }
+
         dockerClient.startContainerCmd(createContainerRequest.id).exec()
         dockerClient.waitContainerCmd(createContainerRequest.id)
             .exec(object : ResultCallback<WaitResponse> {
@@ -73,25 +66,47 @@ fun startBuild(owner: String, repository: String) {
 
                 override fun onError(throwable: Throwable) {
                     // handle failed build
-                    throwable.printStackTrace()
+                    LOGGER.atWarn {
+                        message = "Build failed"
+                        cause = throwable
+                        payload = buildMap(2) {
+                            put("owner", owner)
+                            put("repository", repository)
+                        }
+                    }
                 }
 
                 override fun onComplete() {
+                    LOGGER.info { "Build finished" }
                     val outputStream: InputStream = dockerClient.copyArchiveFromContainerCmd(createContainerRequest.id, "./artifacts/output.jar")
                         .exec()
 
-                    val outputFile = buildDir.resolve("output.jar")
+                    val outputFile = baseBuildDir.resolve("output.jar")
                     outputFile.outputStream().use { outputStream.copyTo(it) }
                     dockerClient.removeContainerCmd(createContainerRequest.id).exec()
                 }
 
                 override fun close() {
                     // handle failed build
+                    LOGGER.atWarn {
+                        message = "Build failed because docker container closed"
+                        payload = buildMap(2) {
+                            put("owner", owner)
+                            put("repository", repository)
+                        }
+                    }
                 }
             })
 
 
     }.onFailure {
-        it.printStackTrace()
+        LOGGER.atError {
+            message = "Failed to start build"
+            cause = it
+            payload = buildMap(2) {
+                put("owner", owner)
+                put("repository", repository)
+            }
+        }
     }
 }

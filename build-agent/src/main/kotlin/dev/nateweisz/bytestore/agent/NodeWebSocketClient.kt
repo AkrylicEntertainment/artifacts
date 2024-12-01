@@ -8,6 +8,7 @@ import kotlinx.coroutines.*
 import java.nio.ByteBuffer
 import java.lang.management.ManagementFactory
 import com.sun.management.OperatingSystemMXBean
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.request.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -19,6 +20,9 @@ import kotlinx.serialization.json.Json
 import java.nio.file.Files
 import java.nio.file.Path
 
+val LOGGER = KotlinLogging.logger {
+
+}
 
 class NodeWebSocketClient {
     private val client = HttpClient(CIO) {
@@ -50,6 +54,8 @@ class NodeWebSocketClient {
                         is Frame.Binary -> {
                             val buffer = ByteBuffer.wrap(frame.data)
                             val id = buffer.getInt()
+
+                            LOGGER.info { "Received Packet: $id" }
 
                             when (id) {
                                 0x00 -> {

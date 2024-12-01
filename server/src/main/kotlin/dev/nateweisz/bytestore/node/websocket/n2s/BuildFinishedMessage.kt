@@ -6,18 +6,22 @@ import dev.nateweisz.bytestore.project.build.BuildStatus
 import org.springframework.web.socket.WebSocketSession
 import java.nio.ByteBuffer
 
-class BuildFinishedMessage(val buildService: BuildService) : N2SProtocolMessage {
+class BuildFinishedMessage(private val buildService: BuildService) : N2SProtocolMessage {
 
     override fun handle(data: ByteBuffer, session: WebSocketSession) {
         val status: BuildStatus = BuildStatus.valueOf(data.getString())
+        val logs = data.getString()
 
         when (status) {
             BuildStatus.SUCCESS -> {
                 // Report success to build service
+                // handle receiving jar in sections of 4096 bytes
+                buildService.finishBuild(session.id, BuildStatus.SUCCESS, logs)
             }
 
             BuildStatus.FAILED -> {
                 // Report failure to
+                buildService.finishBuild(session.id, BuildStatus.FAILED, logs)
             }
             else -> {} // Has someone hijacked our NODES!?? this should never be sent
         }

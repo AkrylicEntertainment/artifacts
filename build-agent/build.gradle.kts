@@ -23,10 +23,11 @@ dependencies {
     implementation("io.ktor:ktor-client-websockets:3.0.1")
     implementation("io.ktor:ktor-client-content-negotiation:3.0.1")
     implementation("io.ktor:ktor-serialization-kotlinx-json:3.0.1")
-    implementation("org.eclipse.jgit:org.eclipse.jgit:7.0.0.202409031743-r")
-    implementation("org.gradle:gradle-tooling-api:7.1.1")
     implementation("com.github.docker-java:docker-java-core:3.4.0")
     implementation("com.github.docker-java:docker-java-transport-httpclient5:3.4.0")
+    implementation("io.github.oshai:kotlin-logging-jvm:7.0.0")
+    implementation("org.slf4j:slf4j-simple:2.0.3")
+    implementation("org.apache.logging.log4j:log4j-api:2.19.0")
 }
 
 kotlin {

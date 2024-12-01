@@ -10,7 +10,12 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 
 @Service
-class BuildService(val nodeService: NodeService, @Lazy val nodeSocketHandler: NodeSocketHandler) {
+class BuildService(
+    val nodeService: NodeService,
+    @Lazy val nodeSocketHandler: NodeSocketHandler,
+    private val buildRepository: BuildRepository,
+    private val buildLogsRepository: BuildLogsRepository
+) {
     private val deadNodeExecutor = Executors.newSingleThreadScheduledExecutor()
     // Key: build id, Value: (node id, build)
     private val currentBuilds: MutableMap<String, Pair<String, Build>> = mutableMapOf()
@@ -39,5 +44,13 @@ class BuildService(val nodeService: NodeService, @Lazy val nodeSocketHandler: No
 
     fun isBuilding(owner: String, repository: String, commitHash: String): Boolean {
         return currentBuilds.values.any { it.second.owner == owner && it.second.repository == repository && it.second.commitHash == commitHash }
+    }
+
+    fun finishBuild(webSocketId: String, status: BuildStatus, logs: String) {
+        val buildId = NodeSocketHandler.sessionIdToNodeId[webSocketId] ?: throw RuntimeException("Somebody's getting *******")
+        val (nodeId, build) = currentBuilds.remove(buildId) ?: throw RuntimeException("Somebody's getting *******")
+
+        buildRepository.save(build.copy(status = status, buildBy = nodeId))
+        buildLogsRepository.save(BuildLogs(buildId = build.id, logs = logs))
     }
 }
