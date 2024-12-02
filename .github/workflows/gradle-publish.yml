@@ -12,11 +12,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Push via Gitracker
-        env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        uses: snowypy/Gitracker@master
       # Step 1: Checkout the repository
       - name: Checkout
         uses: actions/checkout@v3
