@@ -28,13 +28,16 @@ class BuildService(
     init {
         // this executors goal is to check if any queued builds can be started
         deadNodeExecutor.scheduleWithFixedDelay({
-            currentBuilds.values.forEach { (nodeId, build) ->
+            val openNode = findOpenNode()
+            if (openNode != null && queuedBuilds.isNotEmpty()) {
+                val build = queuedBuilds.removeAt(0)
+                startBuildOn(openNode, build)
             }
         }, 0, 300, java.util.concurrent.TimeUnit.MILLISECONDS)
     }
 
     fun findOpenNode(): Node? {
-        return nodeService.nodes.find { it.state == State.ACTIVE && !currentBuilds.containsKey(it.id) }
+        return nodeService.nodes.find { it.state == State.ACTIVE && !currentBuilds.any { build -> build.value.first == it.id } }
     }
 
     fun queueBuild(build: Build) {
@@ -43,9 +46,10 @@ class BuildService(
 
     fun startBuildOn(node: Node, build: Build) {
         val secret = UUID.randomUUID().toString()
+        currentBuildSecrets[build.id.toString()] = secret
 
         currentBuilds[build.id.toString()] = Pair(node.id, build)
-        nodeSocketHandler.sendMessageToNode(node.id, 0x00, RequestBuildMessage(build.owner, build.repository, build.commitHash, secret))
+        nodeSocketHandler.sendMessageToNode(node.id, 0x00, RequestBuildMessage(build.owner, build.repository, build.commitHash, build.id.toString(), secret))
     }
 
     fun isBuilding(owner: String, repository: String, commitHash: String): Boolean {
@@ -61,7 +65,10 @@ class BuildService(
             currentBuilds.remove(buildId) // if it successfully finished, it will be removed after we receive the archive
         }
 
-        buildRepository.save(build.copy(status = status, buildBy = nodeId))
+        build.status = status
+        build.buildBy = nodeId
+
+        buildRepository.save(build)
         buildLogsRepository.save(BuildLogs(buildId = build.id, logs = logs))
 
         if (status == BuildStatus.SUCCESS) {
@@ -71,31 +78,5 @@ class BuildService(
             val pomFile = File(projectDir, "pom.xml")
             pomFile.writeText(pom!!)
         }
-    }
-
-    fun produceMavenXml(owner: String, repo: String, commitHash: String): String {
-        return xml("project") {
-            "modelVersion" {
-                -"4.0.0"
-            }
-            "groupId" { - "com.github.${owner.lowercase()}" }
-            "artifactId" { - repo.lowercase() }
-            "packaging" { - "jar" }
-            "name" { - repo }
-            "version" { - "${commitHash}-SNAPSHOT" }
-            "description" { - "Auto-generated pom.xml for $owner/$repo" }
-            "url" { - "http://localhost:3000/projects/${owner}/${repo}" }
-            "licenses" { // We dont license shit lmfao
-                "license" {
-                    "name" { - "MIT" }
-                    "url" { - "https://opensource.org/licenses/MIT" }
-                    "distribution" { - "repo" }
-                }
-            }
-            "scm" {
-                "connection" { - "scm:git://github.com/$owner/$repo.git"}
-                "url" { - "https://github.com/$owner/$repo"}
-            }
-        }.toString()
     }
 }

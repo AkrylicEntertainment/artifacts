@@ -9,3 +9,5 @@ class ByteStore
 fun main(args: Array<String>) {
     runApplication<ByteStore>(*args)
 }
+
+val FRONTEND_URL = System.getenv("FRONTEND_URL") ?: "https://artifacts.akrylic.org"

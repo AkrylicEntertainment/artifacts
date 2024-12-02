@@ -23,7 +23,8 @@ class SecurityConfig {
             .requestMatchers("/", "/error").permitAll()
             .requestMatchers("/api/projects/user/{userId}").authenticated()
             .requestMatchers("/api/user/").authenticated()
-            .anyRequest().permitAll()
+            .anyRequest()
+            .permitAll()
 
         }
         .sessionManagement { sessions -> sessions

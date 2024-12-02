@@ -1,6 +1,8 @@
 plugins {
     kotlin("jvm") version "2.0.0-RC1"
     kotlin("plugin.serialization") version "2.0.20"
+    id("com.gradleup.shadow") version "9.0.0-beta2"
+    application
 }
 
 group = "dev.nateweisz"
@@ -38,4 +40,8 @@ kotlin {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+application {
+    mainClass = "dev.nateweisz.bytestore.agent.NodeWebSocketClientKt"
 }

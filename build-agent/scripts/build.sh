@@ -8,9 +8,11 @@
 
 owner="$1"
 repository="$2"
+commitHash="$3"
 
 mkdir -p ../artifacts
 git clone https://github.com/"$owner"/"$repository".git project || exit
+git checkout --detach "$commitHash" || exit
 
 cd project || exit
 

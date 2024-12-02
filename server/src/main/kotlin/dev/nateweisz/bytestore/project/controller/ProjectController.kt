@@ -83,7 +83,7 @@ class ProjectController(
         val project = projectRepository.findByUsernameIgnoreCaseAndRepoNameIgnoreCase(username, repository) ?: return ResponseEntity.status(404).build()
         val builds = buildRepository.findByProjectIdAndCommitHashIn(project.id.toLong(), commits.map { commit -> commit.getString("sha") })
 
-        // TODO: why the heck is this so slow
+        // TODO: why the heck is this so slow, edit: this is no longer slow :sunglasses:
         return ResponseEntity.ok(commits.map { commit ->
             val build = builds.find { it.commitHash == commit.getString("sha") }
             ProjectCommitInfo(
@@ -104,6 +104,13 @@ class ProjectController(
         }
 
         return  ResponseEntity.ok(projectRepository.findAllByUserId(userId))
+    }
+
+    @GetMapping("/{username}/{repository}/build/{commitHash}/status")
+    fun getBuildStatus(@PathVariable username: String, @PathVariable repository: String, @PathVariable commitHash: String): ResponseEntity<Build> {
+        val project = projectRepository.findByUsernameIgnoreCaseAndRepoNameIgnoreCase(username, repository) ?: return ResponseEntity.status(404).build()
+        val build = buildRepository.findByProjectIdAndCommitHash(project.id.toLong(), commitHash) ?: return ResponseEntity.status(404).build()
+        return ResponseEntity.ok(build)
     }
 
     /**
@@ -152,7 +159,8 @@ class ProjectController(
     }
 
     @PostMapping("/{buildId}/finish/{buildSecret}")
-    fun finishBuild(@PathVariable buildId: String, buildSecret: String, @RequestParam archive: MultipartFile): ResponseEntity<Void> {
+    fun finishBuild(@PathVariable buildId: String, @PathVariable buildSecret: String, @RequestParam("archive") archive: MultipartFile): ResponseEntity<Void> {
+        println("Received build finish request for $buildId")
         val build = buildService.currentBuilds[buildId]
         if (build == null || build.second.status != BuildStatus.SUCCESS) {
             return ResponseEntity.status(404).build()
@@ -164,7 +172,8 @@ class ProjectController(
 
         // Handle jar here
         val projectDir = File(".build-artifacts/${build.second.owner}/${build.second.repository}/${build.second.commitHash}")
-        archive.transferTo(File(projectDir, "build.jar"))
+        val outputFile = File(projectDir, "output.jar").canonicalFile
+        archive.transferTo(outputFile)
         buildService.currentBuilds.remove(buildId)
         buildService.currentBuildSecrets.remove(buildId)
 

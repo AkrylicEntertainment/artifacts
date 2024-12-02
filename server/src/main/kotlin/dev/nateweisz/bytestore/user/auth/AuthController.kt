@@ -1,5 +1,6 @@
 package dev.nateweisz.bytestore.user.auth
 
+import dev.nateweisz.bytestore.FRONTEND_URL
 import dev.nateweisz.bytestore.user.service.UserService
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.servlet.http.HttpSession
@@ -19,6 +20,6 @@ class AuthController(val userService: UserService) {
                      response: HttpServletResponse, session: HttpSession) {
         val user = userService.processOAuthPostLogin(authentication.principal)
         session.setAttribute("user_id", user.githubId)
-        response.sendRedirect("http://localhost:3000/$callback")
+        response.sendRedirect("${FRONTEND_URL}/$callback")
     }
 }

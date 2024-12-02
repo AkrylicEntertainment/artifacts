@@ -30,6 +30,8 @@ val client = HttpClient(CIO) {
     }
 }
 
+val BACKEND_URL = System.getenv("BACKEND_URL") ?: "https://artifacts-api.akrylic.org"
+
 class NodeWebSocketClient {
 
     private val osBean = ManagementFactory.getPlatformMXBean(OperatingSystemMXBean::class.java)
@@ -38,7 +40,7 @@ class NodeWebSocketClient {
     suspend fun connect(serverUrl: String, configFile: String = "./agent-data.properties") = coroutineScope {
         val nodeId = getOrRegisterNodeId(configFile)
 
-        client.webSocket("ws://$serverUrl/api/nodes/ws?nodeId=$nodeId") {
+        client.webSocket("ws${if (BACKEND_URL.startsWith("https")) "s" else ""}://$serverUrl/api/nodes/ws?nodeId=$nodeId") {
             val heartbeatJob = launch {
                 while (isActive) {
                     sendHeartbeat()
@@ -59,7 +61,7 @@ class NodeWebSocketClient {
 
                             when (id) {
                                 0x00 -> {
-                                    startBuild(this, buffer.getString(), buffer.getString(), buffer.getString(), buffer.getString())
+                                    startBuild(this, buffer.getString(), buffer.getString(), buffer.getString(), buffer.getString(), buffer.getString())
                                 }
                             }
                         }
@@ -80,7 +82,7 @@ class NodeWebSocketClient {
         val configPath = Path.of(configFile)
 
         if (!Files.exists(configPath)) {
-            val response = client.post("http://localhost:8080/api/nodes/register") {
+            val response = client.post("${BACKEND_URL}/api/nodes/register") {
                 contentType(ContentType.Application.Json)
                 setBody(RegistrationRequest(
                     ipAddress = "127.0.0.1",
@@ -119,7 +121,7 @@ class NodeWebSocketClient {
 
 suspend fun main() {
     val client = NodeWebSocketClient()
-    client.connect("localhost:8080")
+    client.connect(BACKEND_URL.replace("http://", "").replace("https://", ""))
 }
 
 fun ByteBuffer.getString(): String {
