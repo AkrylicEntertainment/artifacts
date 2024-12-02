@@ -1,0 +1,50 @@
+name: Build and Deploy Validate
+
+on:
+  push:
+    branches:
+      - '*'
+    # Exclude 'dev' branch using the 'if' condition
+    if: github.ref != 'refs/heads/dev'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Push via Gitracker
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        uses: snowypy/Gitracker@master
+      # Step 1: Checkout the repository
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Push via Gitracker
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        uses: snowypy/Gitracker@master
+      # Step 2: Set up Java and Gradle environment
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Set executable permissions for gradlew
+        run: chmod +x ./gradlew
+      # Step 3: Build the JAR using Gradle
+      - name: Build Validate JAR
+        run: ./gradlew clean build
+        # Ensure the JAR is in `build/libs` after the build
+
+      # Step 5: Deploy the JAR to the server using SFTP
+      - name: Deploy JAR via SFTP
+        uses: Dylan700/sftp-upload-action@latest
+        with:
+          server: ${{ secrets.SERVER }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          port: ${{ secrets.PORT }}
+          uploads: |
+            build/libs/validate.jar => /opt/scala/validate/validate.jar
