@@ -1,6 +1,2 @@
-# Project Overview
-
-## Builds
-Builds are moved to S3 three days after they have no requests. Builds that remain in S3 for 14 days will be deleted.
-
-# TEST!!
+# Artifacts Maven Repository
+We are an open source maven repository that builds open source github projects and turns them into maven artifacts that can be easily added to your project. We are powered by a distributed builder system which we call nodes. They are processes running on computer's that listen to when they need to build something, build it and then return the jar. Currently all of our nodes are powered by [Darkless](https://darkless.cloud) as a donation. In the near future we will allow others to donate nodes.
